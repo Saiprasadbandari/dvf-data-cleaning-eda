@@ -68,3 +68,40 @@ print(list(columns_to_drop))
 df_clean = df.drop(columns=columns_to_drop)
 
 print("\nCleaned shape:", df_clean.shape)
+
+# Convert date column
+df_clean["Date mutation"] = pd.to_datetime(
+    df_clean["Date mutation"],
+    format="%d/%m/%Y",
+    errors="coerce"
+)
+
+# Convert property value from French format to numeric
+df_clean["Valeur fonciere"] = (
+    df_clean["Valeur fonciere"]
+    .astype(str)
+    .str.replace(",", ".", regex=False)
+)
+
+df_clean["Valeur fonciere"] = pd.to_numeric(
+    df_clean["Valeur fonciere"],
+    errors="coerce"
+)
+
+# Remove rows with missing important values
+df_clean = df_clean.dropna(
+    subset=["Date mutation", "Valeur fonciere"]
+)
+
+# Remove duplicate rows
+df_clean = df_clean.drop_duplicates()
+
+print("\nShape after date/price conversion and duplicate removal:")
+print(df_clean.shape)
+
+# Save a small clean sample for EDA
+sample_path = PROCESSED_DIR / "dvf_clean_sample.csv"
+df_clean.head(100000).to_csv(sample_path, index=False)
+
+print("\nSaved cleaned sample to:")
+print(sample_path)
